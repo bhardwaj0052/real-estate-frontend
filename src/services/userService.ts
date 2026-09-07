@@ -5,7 +5,7 @@ export interface CreateUserRequest {
   email: string;
   phone: string;
   passwordHash: string;
-  role: "BUYER" | "OWNER" | "ADMIN";
+  role: "BUYER" | "OWNER";
 }
 const BASE_URL = "http://localhost:3000";
 

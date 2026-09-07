@@ -3,14 +3,14 @@ import axios from "axios";
 export interface CreatePropertyRequest {
   title: string;
   description: string;
-  propertyType: "Apartment" | "Villa" | "Independent House" | "Plot" | "Commercial";
-  bhk: number;
-  area: number;
   city: string;
-  locality: string;
-  fullAddress: string;
-  latitude: number;
-  longitude: number;
+  area: string;
+  address: string;
+  lat: number;
+  lng: number;
+  propertyType: string;
+  bhk: number;
+  sqft: number;
   amenities: string[];
   images: string[];
   price: number;
@@ -40,12 +40,50 @@ export async function getProperties<T>(): Promise<T> {
   return response.data;
 }
 
+export async function getApprovedProperties<T>(): Promise<T> {
+  const response = await axios.get<T>(
+    `${BASE_URL}/properties/approved`,
+    authConfig(),
+  );
+  console.log(response)
+  return response.data;
+}
+
+export async function saveProperty<T>(propertyId: string): Promise<T> {
+  const response = await axios.post<T>(
+    `${BASE_URL}/saved-properties/${propertyId}`,
+    undefined,
+    authConfig(),
+  );
+  return response.data;
+}
+
+export async function getSavedProperties<T>(): Promise<T> {
+  const response = await axios.get<T>(
+    `${BASE_URL}/saved-properties`,
+    authConfig(),
+  );
+  return response.data;
+}
+
+export async function removeSavedProperty<T>(propertyId: string): Promise<T> {
+  const response = await axios.delete<T>(
+    `${BASE_URL}/saved-properties/${propertyId}`,
+    authConfig(),
+  );
+  return response.data;
+}
+
 export async function getProperty<T>(id: string): Promise<T> {
   const response = await axios.get<T>(
     `${BASE_URL}/properties/${id}`,
     authConfig(),
   );
   return response.data;
+}
+
+export async function deleteProperty(id: string): Promise<void> {
+  await axios.delete(`${BASE_URL}/properties/${id}`, authConfig());
 }
 
 export async function updatePropertyStatus<T>(

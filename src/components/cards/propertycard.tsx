@@ -2,11 +2,20 @@
 
 import { Grid, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
-import { getProperties } from "@/services/propertyService";
+import {
+  getApprovedProperties,
+  getSavedProperties,
+} from "@/services/propertyService";
 import type { Property } from "@/types/property";
 import PropertyCardItem from "./propertycarditem";
 
 type PropertiesResponse = Property[] | { properties: Property[] };
+type SavedProperty = { propertyId?: string | { _id: string } };
+type SavedPropertiesResponse =
+  | SavedProperty[]
+  | { properties: SavedProperty[] }
+  | { savedProperties: SavedProperty[] }
+  | { data: SavedProperty[] };
 
 interface PropertyCardProps {
   property?: Property;
@@ -20,6 +29,7 @@ export default function PropertyCard({ property: selectedProperty, detail = fals
       : window.localStorage.getItem("access_token") ?? "",
   );
   const [properties, setProperties] = useState<Property[]>([]);
+  const [savedPropertyIds, setSavedPropertyIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(Boolean(token));
   const [error, setError] = useState("");
 
@@ -31,9 +41,13 @@ export default function PropertyCard({ property: selectedProperty, detail = fals
       }
 
       try {
-        const response = await getProperties<PropertiesResponse>();
+        const [response, savedResponse] = await Promise.all([
+          getApprovedProperties<PropertiesResponse>(),
+          getSavedProperties<SavedPropertiesResponse>(),
+        ]);
         const allProperties = Array.isArray(response) ? response : response.properties;
-        setProperties(allProperties.filter((property) => property.status === "APPROVED"));
+        setProperties(allProperties);
+        setSavedPropertyIds(new Set(getSavedPropertyIds(savedResponse)));
       } catch {
         setError("Unable to load properties.");
       } finally {
@@ -68,9 +82,32 @@ export default function PropertyCard({ property: selectedProperty, detail = fals
     <Grid container spacing={3} sx={{ mt: 10, px: 3 }}>
       {properties.map((item) => (
         <Grid key={item._id} size={{ xs: 12, sm: 6, md: 3 }}>
-          <PropertyCardItem property={item} />
+          <PropertyCardItem
+            property={item}
+            saved={savedPropertyIds.has(item._id)}
+          />
         </Grid>
       ))}
     </Grid>
   );
+}
+
+function getSavedPropertyIds(response: SavedPropertiesResponse): string[] {
+  const savedProperties = Array.isArray(response)
+    ? response
+    : "properties" in response
+      ? response.properties
+      : "savedProperties" in response
+        ? response.savedProperties
+        : response.data;
+
+  return savedProperties.flatMap((item) => {
+    if (!item.propertyId) {
+      return [];
+    }
+
+    return [
+      typeof item.propertyId === "string" ? item.propertyId : item.propertyId._id,
+    ];
+  });
 }

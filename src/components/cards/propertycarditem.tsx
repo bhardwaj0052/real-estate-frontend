@@ -6,6 +6,7 @@ import BrokenImageOutlinedIcon from "@mui/icons-material/BrokenImageOutlined";
 import Link from "next/link";
 import { useState } from "react";
 import { Box, Button, Card, CardContent, CardMedia, Typography } from "@mui/material";
+import { removeSavedProperty, saveProperty } from "@/services/propertyService";
 import type { Property } from "@/types/property";
 
 interface PropertyCardItemProps {
@@ -14,6 +15,8 @@ interface PropertyCardItemProps {
   showStatus?: boolean;
   hideActions?: boolean;
   href?: string;
+  saved?: boolean;
+  onRemoved?: (propertyId: string) => void;
 }
 
 export default function PropertyCardItem({
@@ -22,9 +25,13 @@ export default function PropertyCardItem({
   showStatus = false,
   hideActions = false,
   href,
+  saved = false,
+  onRemoved,
 }: PropertyCardItemProps) {
   const images = property.images.filter(Boolean);
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
+  const [isSaved, setIsSaved] = useState(saved);
+  const [saving, setSaving] = useState(false);
 
   return (
     <Card
@@ -62,7 +69,9 @@ export default function PropertyCardItem({
       <CardContent>
         <Typography variant={detail ? "h4" : "h6"}>{property.title}</Typography>
         <Typography>₹{property.price.toLocaleString("en-IN")}</Typography>
-        {detail && property.location && <Typography color="text.secondary">{property.location}</Typography>}
+        {detail && getPropertyLocation(property) && (
+          <Typography color="text.secondary">{getPropertyLocation(property)}</Typography>
+        )}
         {(detail || showStatus) && property.status && <Typography sx={{ mt: 1 }}>Status: {property.status}</Typography>}
         {detail && property.description && <Typography sx={{ mt: 1 }}>{property.description}</Typography>}
         {!detail && !hideActions && (
@@ -73,12 +82,37 @@ export default function PropertyCardItem({
             >
               Contact Owner
             </Button>
-            <Button sx={{ bgcolor: "#f5276c", color: "#faf7f8", px: 2, mt: 1, borderRadius: 6 }}>
-              Fav <FavoriteIcon sx={{ ml: 0.5 }} />
+            <Button
+              disabled={saving}
+              onClick={async (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                setSaving(true);
+                try {
+                  if (isSaved) {
+                    await removeSavedProperty(property._id);
+                    setIsSaved(false);
+                    onRemoved?.(property._id);
+                  } else {
+                    await saveProperty(property._id);
+                    setIsSaved(true);
+                  }
+                } finally {
+                  setSaving(false);
+                }
+              }}
+              sx={{ bgcolor: isSaved ? "#b71c1c" : "#f5276c", color: "#faf7f8", px: 2, mt: 1, borderRadius: 6 }}
+            >
+              {isSaved ? "Saved" : "Fav"} <FavoriteIcon sx={{ ml: 0.5 }} />
             </Button>
           </>
         )}
       </CardContent>
     </Card>
   );
+}
+
+function getPropertyLocation(property: Property) {
+  return property.location ??
+    [property.address, property.area, property.city].filter(Boolean).join(", ");
 }

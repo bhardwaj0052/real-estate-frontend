@@ -13,6 +13,10 @@ export interface Property {
   fullAddress?: string;
   latitude?: number;
   longitude?: number;
+  address?: string;
+  lat?: number;
+  lng?: number;
+  sqft?: number;
   amenities?: string[];
   images: string[];
   price: number;

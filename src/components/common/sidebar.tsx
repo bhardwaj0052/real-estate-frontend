@@ -26,22 +26,22 @@ const userMenuItems = [
   {
     label: "Home",
     icon: <HomeIcon />,
-    href: "/properties",
+    href: "/buyer/profile",
   },
   {
     label: "Favourites",
     icon: <FavoriteIcon />,
-    href: "/properties",
+    href: "/buyer/profile/saved-properties",
   },
   {
     label: "Inbox",
     icon: <MessageIcon />,
-    href: "/properties",
+    href: "/buyer/profile/messages",
   },
   {
-    label: "My Properties",
+    label: "Properties",
     icon: <AddHomeIcon />,
-    href: "/properties",
+    href: "/buyer/profile/properties",
   },
 ];
 
