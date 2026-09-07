@@ -1,5 +1,5 @@
-import PropertyCard from "@/components/cards/propertycard";
+import PropertySearch from "@/components/properties/propertysearch";
 
 export default function PropertiesPage() {
-  return <PropertyCard />;
+  return <PropertySearch />;
 }
