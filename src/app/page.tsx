@@ -1,9 +1,5 @@
-import PropertyCard from "@/components/cards/propertycard";
+import Authform from "@/components/authform/authform";
 
 export default function Home() {
-  return (
-    <>
-    <PropertyCard/>
-    </>
-  );
+  return <Authform />;
 }

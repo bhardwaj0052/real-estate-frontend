@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Box,
   Button,
@@ -9,42 +11,66 @@ import {
   TextField,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { createUser } from "@/services/userService";
 
 interface AuthformProps {
-  onSave: (values: {
-    fname: string;
-    lname: string;
+  onSave?: (values: {
+    name: string;
     email: string;
+    phone: string;
     password: string;
+    role: "BUYER" | "OWNER" | "ADMIN";
   }) => void;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 export default function Authform({ onSave, onClose }: AuthformProps) {
+  const router = useRouter();
   const formik = useFormik({
     initialValues: {
-      fname: "",
-      lname: "",
+      name: "",
       email: "",
+      phone: "",
       password: "",
+      role: "BUYER" as "BUYER" | "OWNER" | "ADMIN",
     },
 
     validationSchema: Yup.object({
-      fname: Yup.string().required("First name is required"),
-
-      lname: Yup.string().required("Last name is required"),
+      name: Yup.string().required("name is required"),
 
       email: Yup.string().email("Invalid email").required("Email is required"),
+
+      phone: Yup.string()
+        .matches(/^[0-9]{10}$/, "Phone must be 10 digits")
+        .required("Phone is required"),
+
+      role: Yup.string()
+        .oneOf(["BUYER", "OWNER", "ADMIN"])
+        .required("Role is required"),
 
       password: Yup.string()
         .min(6, "Password must be at least 6 characters")
         .required("Password is required"),
     }),
 
-    onSubmit: (values) => {
-      onSave(values);
+    onSubmit: async (values) => {
+      if (onSave) {
+        onSave(values);
+        return;
+      }
+
+      await createUser({
+          name: values.name,
+          email: values.email,
+          phone: values.phone,
+          passwordHash: values.password,
+          role: values.role,
+        });
+      router.push("/login");
     },
   });
 
@@ -63,11 +89,11 @@ export default function Authform({ onSave, onClose }: AuthformProps) {
         <CardHeader
           title="Sign Up"
           subheader="Create your account"
-          action={
+          action={onClose && (
             <IconButton onClick={onClose}>
               <CloseIcon />
             </IconButton>
-          }
+          )}
         />
 
         <CardContent>
@@ -79,25 +105,14 @@ export default function Authform({ onSave, onClose }: AuthformProps) {
             }}
           >
             <TextField
-              label="First Name"
+              label="Name"
               fullWidth
-              name="fname"
-              value={formik.values.fname}
+              name="name"
+              value={formik.values.name}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              error={formik.touched.fname && Boolean(formik.errors.fname)}
-              helperText={formik.touched.fname && formik.errors.fname}
-            />
-
-            <TextField
-              label="Last Name"
-              fullWidth
-              name="lname"
-              value={formik.values.lname}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.lname && Boolean(formik.errors.lname)}
-              helperText={formik.touched.lname && formik.errors.lname}
+              error={formik.touched.name && Boolean(formik.errors.name)}
+              helperText={formik.touched.name && formik.errors.name}
             />
 
             <TextField
@@ -113,6 +128,17 @@ export default function Authform({ onSave, onClose }: AuthformProps) {
             />
 
             <TextField
+              label="Phone"
+              fullWidth
+              name="phone"
+              value={formik.values.phone}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.phone && Boolean(formik.errors.phone)}
+              helperText={formik.touched.phone && formik.errors.phone}
+            />
+
+            <TextField
               label="Password"
               type="password"
               fullWidth
@@ -123,13 +149,40 @@ export default function Authform({ onSave, onClose }: AuthformProps) {
               error={formik.touched.password && Boolean(formik.errors.password)}
               helperText={formik.touched.password && formik.errors.password}
             />
+
+            <TextField
+              select
+              label="Role"
+              fullWidth
+              name="role"
+              value={formik.values.role}
+              onChange={(event) =>
+                formik.setFieldValue(
+                  "role",
+                  event.target.value as "BUYER" | "OWNER" | "ADMIN",
+                )
+              }
+              onBlur={formik.handleBlur}
+              error={formik.touched.role && Boolean(formik.errors.role)}
+              helperText={formik.touched.role && formik.errors.role}
+              slotProps={{ select: { native: true } }}
+            >
+              <option value="BUYER">BUYER</option>
+              <option value="OWNER">OWNER</option>
+              <option value="ADMIN">ADMIN</option>
+            </TextField>
           </Box>
         </CardContent>
 
         <CardActions sx={{ justifyContent: "center", padding: 2 }}>
-          <Button variant="contained" fullWidth type="submit">
-            Sign Up
-          </Button>
+          <Box sx={{ width: "100%" }}>
+            <Button variant="contained" fullWidth type="submit">
+              Sign Up
+            </Button>
+            <Button component={Link} href="/login" fullWidth sx={{ mt: 1 }}>
+              Already have an account? Login
+            </Button>
+          </Box>
         </CardActions>
       </Card>
     </Box>

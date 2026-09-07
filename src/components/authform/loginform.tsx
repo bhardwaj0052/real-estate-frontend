@@ -1,0 +1,71 @@
+"use client";
+
+import { Box, Button, Card, CardContent, CardHeader, TextField } from "@mui/material";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { login } from "@/services/authService";
+import { useAuth } from "@/context/AuthContext";
+
+export default function LoginForm() {
+  const router = useRouter();
+  const { setUser } = useAuth();
+  const formik = useFormik({
+    initialValues: { email: "", password: "" },
+    validationSchema: Yup.object({
+      email: Yup.string().email("Invalid email").required("Email is required"),
+      password: Yup.string().required("Password is required"),
+    }),
+    onSubmit: async (values, { setStatus }) => {
+      try {
+        const response = await login(values);
+        setUser({ accessToken: response.access_token, role: response.role });
+        router.push(
+          response.role.toUpperCase() === "ADMIN" ? "/admin" : "/properties",
+        );
+      } catch {
+        setStatus("Invalid email or password");
+      }
+    },
+  });
+
+  return (
+    <Box
+      component="form"
+      onSubmit={formik.handleSubmit}
+      sx={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}
+    >
+      <Card sx={{ width: 400, p: 2 }}>
+        <CardHeader title="Login" subheader="Access your account" />
+        <CardContent>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <TextField
+              label="Email"
+              type="email"
+              name="email"
+              value={formik.values.email}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.email && Boolean(formik.errors.email)}
+              helperText={formik.touched.email && formik.errors.email}
+            />
+            <TextField
+              label="Password"
+              type="password"
+              name="password"
+              value={formik.values.password}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.password && Boolean(formik.errors.password)}
+              helperText={formik.touched.password && formik.errors.password}
+            />
+            {formik.status && <Box color="error.main">{formik.status}</Box>}
+            <Button type="submit" variant="contained">Login</Button>
+            <Button component={Link} href="/">Create account</Button>
+          </Box>
+        </CardContent>
+      </Card>
+    </Box>
+  );
+}

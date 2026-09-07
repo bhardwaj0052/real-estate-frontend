@@ -3,17 +3,29 @@
 import { AppBar, Toolbar, Typography, Box, IconButton } from "@mui/material";
 
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import LogoutIcon from "@mui/icons-material/Logout";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Authform from "../authform/authform";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Header() {
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const [show, setShow] = useState(false);
+
   const handleClose = () => setShow(false);
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
+
   const onSubmit = (values: {
-    fname: string;
-    lname: string;
+    name: string;
     email: string;
+    phone: string;
     password: string;
+    role: "BUYER" | "OWNER" | "ADMIN";
   }) => {
     console.log(values);
   };
@@ -40,9 +52,10 @@ export default function Header() {
           <Box sx={{ position: "relative" }}>
             <IconButton
               color="inherit"
-              onClick={() => setShow((value) => !value)}
+              onClick={user ? handleLogout : () => setShow((value) => !value)}
+              aria-label={user ? "Logout" : "Account"}
             >
-              <AccountCircleIcon />
+              {user ? <LogoutIcon /> : <AccountCircleIcon />}
             </IconButton>
           </Box>
         </Toolbar>
