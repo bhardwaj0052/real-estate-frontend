@@ -15,7 +15,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
-    // Auth is restored from browser storage after hydration.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setUser(getAuth());
   }, []);
@@ -38,6 +37,5 @@ export function useAuth() {
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
-
   return context;
 }

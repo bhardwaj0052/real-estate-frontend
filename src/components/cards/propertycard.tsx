@@ -24,20 +24,24 @@ export default function PropertyCard({ property: selectedProperty, detail = fals
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!token) {
-      return;
-    }
-    getProperties<PropertiesResponse>()
-      .then((response) => {
+    async function loadProperties() {
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await getProperties<PropertiesResponse>();
         const allProperties = Array.isArray(response) ? response : response.properties;
         setProperties(allProperties.filter((property) => property.status === "APPROVED"));
-      })
-      .catch(() => {
+      } catch {
         setError("Unable to load properties.");
-      })
-      .finally(() => {
+      } finally {
         setLoading(false);
-      });
+      }
+    }
+
+    loadProperties();
   }, [token]);
 
   if (selectedProperty) {

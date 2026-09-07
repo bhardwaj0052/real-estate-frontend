@@ -13,17 +13,20 @@ export default function OwnerPropertyDetails({ slug }: { slug: string }) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    getProperty<Property>(slug)
-      .then((response) => {
+    async function loadProperty() {
+      try {
+        const response = await getProperty<Property | { property: Property }>(slug);
         const propertyResponse = response as Property | { property: Property };
         setProperty("property" in propertyResponse ? propertyResponse.property : propertyResponse);
-      })
-      .catch((requestError) => {
+      } catch (requestError) {
         const message = axios.isAxiosError(requestError)
           ? requestError.response?.data?.message
           : null;
         setError(Array.isArray(message) ? message.join(", ") : message ?? "Unable to load this property.");
-      });
+      }
+    }
+
+    loadProperty();
   }, [slug]);
 
   if (error) {

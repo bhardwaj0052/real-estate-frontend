@@ -22,7 +22,7 @@ export default function LoginForm() {
         const response = await login(values);
         setUser({ accessToken: response.access_token, role: response.role });
         router.push(
-          response.role.toUpperCase() === "ADMIN" ? "/admin" : "/properties",
+          response.role.toUpperCase() === "ADMIN" ? "/admin" : "/owner/profile",
         );
       } catch {
         setStatus("Invalid email or password");

@@ -49,7 +49,7 @@ export default function PropertyForm() {
         title: validatedValues.title,
         description: validatedValues.description,
         location: validatedValues.location,
-        image: validatedValues.images,
+        images: validatedValues.images,
         price: validatedValues.price,
       });
       router.push("/owner/profile/properties");

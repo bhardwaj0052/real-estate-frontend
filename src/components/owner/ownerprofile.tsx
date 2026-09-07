@@ -15,7 +15,7 @@ export default function OwnerProfile() {
         <CardContent>
           <Typography variant="h6">{user?.name ?? "Property owner"}</Typography>
           <Typography color="text.secondary" sx={{ mt: 1 }}>
-            {user?.email ?? "Email is available from your account"}
+            Email: {user?.email}
           </Typography>
           <Typography sx={{ mt: 2 }}>Role: {user?.role ?? "OWNER"}</Typography>
           {user?.userId && <Typography sx={{ mt: 1 }}>Owner ID: {user.userId}</Typography>}

@@ -30,19 +30,23 @@ export default function AdminProperties() {
   const [updatingId, setUpdatingId] = useState<string | number | null>(null);
 
   useEffect(() => {
-    getProperties<PropertiesResponse>()
-      .then((response) => {
+    async function loadProperties() {
+      try {
+        const response = await getProperties<PropertiesResponse>();
         const data = Array.isArray(response) ? response : response.properties;
         setProperties(
           data.filter(
             (property) => property.status?.toUpperCase() === "PENDING"
           )
         );
-      })
-      .catch((requestError) => {
+      } catch (requestError) {
         setError(getApiError(requestError, "Unable to load property requests."));
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadProperties();
   }, []);
 
   const changeStatus = async (
@@ -58,7 +62,6 @@ export default function AdminProperties() {
 
     setUpdatingId(id);
     setError("");
-
     try {
       await updatePropertyStatus(String(id), {
         status,

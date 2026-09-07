@@ -67,7 +67,7 @@ const ownerMenuItems = [
   {
     label: "Profile",
     icon: <PersonIcon />,
-    href: "/owner",
+    href: "/owner/profile",
   },
   {
     label: "New Property",

@@ -19,9 +19,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   useEffect(() => {
     const currentPath = pathname ?? "/";
     const auth = getAuth();
-
     if (publicRoutes.includes(currentPath)) {
-      // The guard must finish checking before rendering the route.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setCheckingAuth(false);
       return;

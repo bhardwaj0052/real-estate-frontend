@@ -4,7 +4,7 @@ export interface CreatePropertyRequest {
   title: string;
   description: string;
   location: string;
-  image: string[];
+  images: string[];
   price: number;
 }
 

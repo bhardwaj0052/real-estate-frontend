@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -15,6 +16,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import axios from "axios";
 import { createUser } from "@/services/userService";
 
 interface AuthformProps {
@@ -36,7 +38,7 @@ export default function Authform({ onSave, onClose }: AuthformProps) {
       email: "",
       phone: "",
       password: "",
-      role: "BUYER" as "BUYER" | "OWNER" | "ADMIN",
+      role: "BUYER" as "BUYER" | "OWNER",
     },
 
     validationSchema: Yup.object({
@@ -62,15 +64,24 @@ export default function Authform({ onSave, onClose }: AuthformProps) {
         onSave(values);
         return;
       }
-
-      await createUser({
+      try {
+        await createUser({
           name: values.name,
           email: values.email,
           phone: values.phone,
           passwordHash: values.password,
           role: values.role,
         });
-      router.push("/login");
+        router.push("/login");
+      } catch (requestError) {
+        const responseMessage = axios.isAxiosError(requestError)
+          ? requestError.response?.data?.message
+          : null;
+        const message = Array.isArray(responseMessage)
+          ? responseMessage.join(", ")
+          : responseMessage ?? "Unable to create your account. Please try again.";
+        formik.setStatus(message);
+      }
     },
   });
 
@@ -89,11 +100,13 @@ export default function Authform({ onSave, onClose }: AuthformProps) {
         <CardHeader
           title="Sign Up"
           subheader="Create your account"
-          action={onClose && (
-            <IconButton onClick={onClose}>
-              <CloseIcon />
-            </IconButton>
-          )}
+          action={
+            onClose && (
+              <IconButton onClick={onClose}>
+                <CloseIcon />
+              </IconButton>
+            )
+          }
         />
 
         <CardContent>
@@ -104,6 +117,7 @@ export default function Authform({ onSave, onClose }: AuthformProps) {
               gap: 2,
             }}
           >
+            {formik.status && <Alert severity="error">{formik.status}</Alert>}
             <TextField
               label="Name"
               fullWidth
