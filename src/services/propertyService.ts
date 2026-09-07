@@ -3,7 +3,15 @@ import axios from "axios";
 export interface CreatePropertyRequest {
   title: string;
   description: string;
-  location: string;
+  propertyType: "Apartment" | "Villa" | "Independent House" | "Plot" | "Commercial";
+  bhk: number;
+  area: number;
+  city: string;
+  locality: string;
+  fullAddress: string;
+  latitude: number;
+  longitude: number;
+  amenities: string[];
   images: string[];
   price: number;
 }

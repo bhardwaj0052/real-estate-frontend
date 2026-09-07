@@ -4,7 +4,16 @@ export interface Property {
   _id: string;
   title: string;
   description?: string;
+  propertyType?: "Apartment" | "Villa" | "Independent House" | "Plot" | "Commercial" | string;
+  bhk?: number;
+  area?: number;
   location?: string;
+  city?: string;
+  locality?: string;
+  fullAddress?: string;
+  latitude?: number;
+  longitude?: number;
+  amenities?: string[];
   images: string[];
   price: number;
   status?: PropertyStatus | null;
