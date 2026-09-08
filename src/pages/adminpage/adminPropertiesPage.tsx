@@ -1,6 +1,5 @@
 "use client";
 
-import axios from "axios";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -39,8 +38,8 @@ export default function AdminPropertiesPage() {
             (property) => property.status?.toUpperCase() === "PENDING"
           )
         );
-      } catch (requestError) {
-        setError(getApiError(requestError, "Unable to load property requests."));
+      } catch {
+        setError("Unable to load property requests.");
       } finally {
         setLoading(false);
       }
@@ -71,13 +70,8 @@ export default function AdminPropertiesPage() {
       setProperties((current) =>
         current.filter((property) => property._id !== id)
       );
-    } catch (requestError) {
-      setError(
-        getApiError(
-          requestError,
-          `Unable to ${status.toLowerCase()} this property.`,
-        ),
-      );
+    } catch {
+      setError(`Unable to ${status.toLowerCase()} this property.`);
     } finally {
       setUpdatingId(null);
     }
@@ -149,17 +143,3 @@ export default function AdminPropertiesPage() {
   );
 }
 
-function getApiError(requestError: unknown, fallback: string) {
-  if (!axios.isAxiosError(requestError)) {
-    return fallback;
-  }
-
-  const responseData = requestError.response?.data;
-  const message = responseData?.message ?? responseData?.error;
-  const detail = Array.isArray(message) ? message.join(", ") : message;
-  const status = requestError.response?.status;
-
-  return detail
-    ? `${detail} (HTTP ${status ?? "error"})`
-    : `${fallback} (HTTP ${status ?? "error"})`;
-}

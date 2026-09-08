@@ -1,6 +1,13 @@
 "use client";
 
-import { Box, Button, Card, CardContent, CardHeader, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  TextField,
+} from "@mui/material";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFormik } from "formik";
@@ -29,13 +36,13 @@ export default function LoginForm() {
           userId: authenticatedUser?.userId,
         });
         const role = response.role.toUpperCase();
-        router.push(
-          role === "ADMIN"
-            ? "/admin"
-            : role === "BUYER"
-              ? "/buyer/profile"
-              : "/owner/profile",
-        );
+        if (role === "ADMIN") {
+          router.push("/admin");
+        } else if (role === "BUYER") {
+          router.push("/buyer/profile");
+        } else {
+          router.push("/owner/profile");
+        }
       } catch {
         setStatus("Invalid email or password");
       }
@@ -46,7 +53,12 @@ export default function LoginForm() {
     <Box
       component="form"
       onSubmit={formik.handleSubmit}
-      sx={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
     >
       <Card sx={{ width: 400, p: 2 }}>
         <CardHeader title="Login" subheader="Access your account" />
@@ -73,8 +85,12 @@ export default function LoginForm() {
               helperText={formik.touched.password && formik.errors.password}
             />
             {formik.status && <Box color="error.main">{formik.status}</Box>}
-            <Button type="submit" variant="contained">Login</Button>
-            <Button component={Link} href="/">Create account</Button>
+            <Button type="submit" variant="contained">
+              Login
+            </Button>
+            <Button component={Link} href="/">
+              Create account
+            </Button>
           </Box>
         </CardContent>
       </Card>

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import axios from "axios";
 import { Alert, Box, Button, Typography } from "@mui/material";
 import { getProperty } from "@/services/propertyService";
 import type { Property } from "@/types/property";
@@ -18,11 +17,8 @@ export default function OwnerPropertyDetails({ slug }: { slug: string }) {
         const response = await getProperty<Property | { property: Property }>(slug);
         const propertyResponse = response as Property | { property: Property };
         setProperty("property" in propertyResponse ? propertyResponse.property : propertyResponse);
-      } catch (requestError) {
-        const message = axios.isAxiosError(requestError)
-          ? requestError.response?.data?.message
-          : null;
-        setError(Array.isArray(message) ? message.join(", ") : message ?? "Unable to load this property.");
+      } catch {
+        setError("Unable to load this property.");
       }
     }
 

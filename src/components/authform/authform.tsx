@@ -16,7 +16,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import axios from "axios";
 import { createUser } from "@/services/userService";
 
 interface AuthformProps {
@@ -73,14 +72,8 @@ export default function Authform({ onSave, onClose }: AuthformProps) {
           role: values.role,
         });
         router.push("/login");
-      } catch (requestError) {
-        const responseMessage = axios.isAxiosError(requestError)
-          ? requestError.response?.data?.message
-          : null;
-        const message = Array.isArray(responseMessage)
-          ? responseMessage.join(", ")
-          : responseMessage ?? "Unable to create your account. Please try again.";
-        formik.setStatus(message);
+      } catch {
+        formik.setStatus("Unable to create your account. Please try again.");
       }
     },
   });

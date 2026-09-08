@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import axios from "axios";
 import {
   Alert,
   Box,
@@ -106,15 +105,8 @@ export default function PropertyForm() {
           price: Number(values.price),
         });
         router.push("/owner/profile/properties");
-      } catch (err) {
-        const message = axios.isAxiosError(err)
-          ? err.response?.data?.message
-          : null;
-        setStatus(
-          Array.isArray(message)
-            ? message.join(", ")
-            : (message ?? "Unable to create property. Please try again."),
-        );
+      } catch {
+        setStatus("Unable to create property. Please try again.");
       } finally {
         setSubmitting(false);
       }

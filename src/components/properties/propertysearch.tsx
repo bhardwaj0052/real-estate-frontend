@@ -217,6 +217,7 @@ export default function PropertySearch() {
                 amenities={property.amenities}
                 latitude={property.latitude ?? property.lat}
                 longitude={property.longitude ?? property.lng}
+                ownerId={property.ownerId ?? property.owner?._id}
                 saved={savedPropertyIds.has(property._id)}
                 onFavorite={() => toggleSavedProperty(property._id)}
               />

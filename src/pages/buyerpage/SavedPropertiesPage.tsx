@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { Alert, Box, Grid, Typography } from "@mui/material";
-import { getProperty, getSavedProperties } from "@/services/propertyService";
+import {
+    getProperty,
+    getSavedProperties,
+    removeSavedProperty,
+} from "@/services/propertyService";
 import PropertyCard from "@/components/cards/resuablepropertycard";
 import type { Property } from "@/types/property";
 
@@ -51,17 +54,8 @@ export default function SavedPropertiesPage() {
                         (property): property is Property => Boolean(property?._id),
                     ),
                 );
-            } catch (requestError) {
-                if (axios.isAxiosError(requestError)) {
-                    const message = requestError.response?.data?.message;
-                    setError(
-                        Array.isArray(message)
-                            ? message.join(", ")
-                            : message ?? `Unable to load saved properties (HTTP ${requestError.response?.status ?? "error"}).`,
-                    );
-                } else {
-                    setError("Unable to load saved properties.");
-                }
+            } catch {
+                setError("Unable to load saved properties.");
             } finally {
                 setLoading(false);
             }
@@ -69,6 +63,15 @@ export default function SavedPropertiesPage() {
 
         loadSavedProperties();
     }, []);
+
+    const removeFromSaved = async (propertyId: string) => {
+        try {
+            await removeSavedProperty(propertyId);
+            setProperties((current) => current.filter((item) => item._id !== propertyId));
+        } catch {
+            setError("Unable to remove this saved property.");
+        }
+    };
 
     if (loading) {
         return <Typography sx={{ mt: 10, px: 3 }}>Loading saved properties...</Typography>;
@@ -93,8 +96,9 @@ export default function SavedPropertiesPage() {
                             bhk={property.bhk}
                             sqft={property.sqft ?? property.area}
                             propertyType={property.propertyType}
+                            ownerId={property.ownerId ?? property.owner?._id}
                             saved
-                            onFavorite={() => setProperties((current) => current.filter((item) => item._id !== property._id))}
+                            onFavorite={() => removeFromSaved(property._id)}
                         />
                     </Grid>
                 ))}

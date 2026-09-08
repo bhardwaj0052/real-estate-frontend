@@ -1,4 +1,5 @@
-import { useState } from "react";
+import * as React from "react";
+import { useEffect, useState } from "react";
 import { removeSavedProperty, saveProperty } from "@/services/propertyService";
 import type { Property } from "@/types/property";
 
@@ -17,6 +18,11 @@ export function usePropertyCardItem(
   const [brokenImage, setBrokenImage] = useState(false);
   const [isSaved, setIsSaved] = useState(saved);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsSaved(saved);
+  }, [saved]);
 
   async function toggleSave(event: React.MouseEvent) {
     event.preventDefault();
