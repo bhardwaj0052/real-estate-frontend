@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Alert, Box, Grid, Typography } from "@mui/material";
 import { getProperty, getSavedProperties } from "@/services/propertyService";
-import PropertyCardItem from "@/components/cards/propertycarditem";
+import PropertyCard from "@/components/cards/resuablepropertycard";
 import type { Property } from "@/types/property";
 
 type SavedProperty =
@@ -85,14 +85,16 @@ export default function SavedPropertiesPage() {
             <Grid container spacing={3}>
                 {properties.map((property) => (
                     <Grid key={property._id} size={{ xs: 12, sm: 6, md: 4 }}>
-                        <PropertyCardItem
-                            property={property}
+                        <PropertyCard
+                            title={property.title}
+                            price={property.price}
+                            location={getPropertyLocation(property)}
+                            images={property.images}
+                            bhk={property.bhk}
+                            sqft={property.sqft ?? property.area}
+                            propertyType={property.propertyType}
                             saved
-                            onRemoved={(propertyId) =>
-                                setProperties((current) =>
-                                    current.filter((item) => item._id !== propertyId),
-                                )
-                            }
+                            onFavorite={() => setProperties((current) => current.filter((item) => item._id !== property._id))}
                         />
                     </Grid>
                 ))}
@@ -103,6 +105,10 @@ export default function SavedPropertiesPage() {
             )}
         </Box>
     );
+}
+
+function getPropertyLocation(property: Property) {
+    return property.location ?? property.fullAddress ?? [property.address, property.area, property.city].filter(Boolean).join(", ");
 }
 
 function getSavedPropertyItems(response: SavedPropertiesResponse): SavedProperty[] {

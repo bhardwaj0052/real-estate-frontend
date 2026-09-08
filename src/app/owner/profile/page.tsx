@@ -1,5 +1,5 @@
-import OwnerProfile from "@/components/owner/ownerprofile";
+import OwnerProfilePage from "@/pages/ownerpage/ownerProfilePage";
 
 export default function OwnerPage() {
-	return <OwnerProfile />;
+	return <OwnerProfilePage />;
 }

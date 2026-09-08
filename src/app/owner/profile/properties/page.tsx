@@ -1,5 +1,5 @@
-import OwnerProperties from "@/components/owner/ownerproperties";
+import OwnerPropertiesPage from "@/pages/ownerpage/ownerPropertiesPage";
 
-export default function OwnerPropertiesPage() {
-	return <OwnerProperties />;
+export default function OwnerProperties() {
+	return <OwnerPropertiesPage />;
 }

@@ -1,5 +1,5 @@
-import AdminProperties from "@/components/admin/adminproperties";
+import AdminPropertiesPage from "@/pages/adminpage/adminPropertiesPage";
 
-export default function AdminPropertiesPage() {
-	return <AdminProperties />;
+export default function AdminProperties() {
+	return <AdminPropertiesPage />;
 }

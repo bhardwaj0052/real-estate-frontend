@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { login } from "@/services/authService";
+import { getAuth, login } from "@/services/authService";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LoginForm() {
@@ -20,7 +20,14 @@ export default function LoginForm() {
     onSubmit: async (values, { setStatus }) => {
       try {
         const response = await login(values);
-        setUser({ accessToken: response.access_token, role: response.role });
+        const authenticatedUser = getAuth();
+        setUser({
+          accessToken: response.access_token,
+          role: response.role,
+          email: authenticatedUser?.email ?? values.email,
+          name: authenticatedUser?.name,
+          userId: authenticatedUser?.userId,
+        });
         const role = response.role.toUpperCase();
         router.push(
           role === "ADMIN"

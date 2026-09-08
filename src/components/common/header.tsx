@@ -25,7 +25,7 @@ export default function Header() {
     email: string;
     phone: string;
     password: string;
-    role: "BUYER" | "OWNER" | "ADMIN";
+    role: "BUYER" | "OWNER";
   }) => {
     console.log(values);
   };

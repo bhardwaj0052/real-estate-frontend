@@ -1,5 +1,5 @@
-import Profile from "@/components/common/profile";
+import AdminProfilePage from "@/pages/adminpage/adminProfilePage";
 
-export default function AdminProfilePage() {
-	return <Profile title="Admin Profile" fallbackName="Administrator" idLabel="Admin ID" fallbackRole="ADMIN" />;
+export default function AdminProfile() {
+	return <AdminProfilePage/>;
 }

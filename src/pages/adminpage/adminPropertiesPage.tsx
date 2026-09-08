@@ -20,7 +20,7 @@ import type { Property } from "@/types/property";
 
 type PropertiesResponse = Property[] | { properties: Property[] };
 
-export default function AdminProperties() {
+export default function AdminPropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

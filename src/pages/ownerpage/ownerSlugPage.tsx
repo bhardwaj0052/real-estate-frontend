@@ -40,7 +40,7 @@ export default function OwnerPropertyDetails({ slug }: { slug: string }) {
   return (
     <Box sx={{ mt: 10, px: 3, pb: 4 }}>
       <Button component={Link} href="/owner/profile/properties" sx={{ mb: 2 }}>
-        Back to My Properties
+        Back
       </Button>
       <Box sx={{ maxWidth: 800 }}>
         <PropertyCard property={property} detail />

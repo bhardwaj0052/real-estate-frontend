@@ -7,7 +7,7 @@ import { deleteProperty, getProperties } from "@/services/propertyService";
 import type { Property } from "@/types/property";
 import PropertyCardItem from "@/components/cards/propertycarditem";
 
-export default function OwnerProperties() {
+export default function OwnerPropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

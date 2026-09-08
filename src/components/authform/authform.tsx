@@ -25,7 +25,7 @@ interface AuthformProps {
     email: string;
     phone: string;
     password: string;
-    role: "BUYER" | "OWNER" | "ADMIN";
+    role: "BUYER" | "OWNER";
   }) => void;
   onClose?: () => void;
 }
@@ -51,7 +51,7 @@ export default function Authform({ onSave, onClose }: AuthformProps) {
         .required("Phone is required"),
 
       role: Yup.string()
-        .oneOf(["BUYER", "OWNER", "ADMIN"])
+        .oneOf(["BUYER", "OWNER"])
         .required("Role is required"),
 
       password: Yup.string()
@@ -173,7 +173,7 @@ export default function Authform({ onSave, onClose }: AuthformProps) {
               onChange={(event) =>
                 formik.setFieldValue(
                   "role",
-                  event.target.value as "BUYER" | "OWNER" | "ADMIN",
+                  event.target.value as "BUYER" | "OWNER",
                 )
               }
               onBlur={formik.handleBlur}
@@ -183,7 +183,6 @@ export default function Authform({ onSave, onClose }: AuthformProps) {
             >
               <option value="BUYER">BUYER</option>
               <option value="OWNER">OWNER</option>
-              <option value="ADMIN">ADMIN</option>
             </TextField>
           </Box>
         </CardContent>

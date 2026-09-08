@@ -1,13 +1,26 @@
 "use client";
 
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import ChatBubbleOutlineOutlinedIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
 import BrokenImageOutlinedIcon from "@mui/icons-material/BrokenImageOutlined";
 import Link from "next/link";
-import { useState } from "react";
-import { Box, Button, Card, CardContent, CardMedia, Typography } from "@mui/material";
-import { removeSavedProperty, saveProperty } from "@/services/propertyService";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CardMedia,
+  Chip,
+  IconButton,
+  Stack,
+  Typography,
+} from "@mui/material";
 import type { Property } from "@/types/property";
+import {
+  getPropertyLocation,
+  usePropertyCardItem,
+} from "@/hooks/usePropertyCardItem";
 
 interface PropertyCardItemProps {
   property: Property;
@@ -29,90 +42,178 @@ export default function PropertyCardItem({
   onRemoved,
 }: PropertyCardItemProps) {
   const images = property.images.filter(Boolean);
-  const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
-  const [isSaved, setIsSaved] = useState(saved);
-  const [saving, setSaving] = useState(false);
+  const { brokenImage, isSaved, saving, setBrokenImage, toggleSave } =
+    usePropertyCardItem(property._id, saved, onRemoved);
 
   return (
     <Card
       component={href ? Link : "div"}
       href={href}
-      sx={href ? { textDecoration: "none", color: "inherit" } : undefined}
+      sx={{
+        width: "100%",
+        borderRadius: 3,
+        overflow: "hidden",
+        textDecoration: "none",
+        color: "inherit",
+        transition: "box-shadow 0.2s ease, transform 0.2s ease",
+        "&:hover": href
+          ? { boxShadow: 4, transform: "translateY(-2px)" }
+          : undefined,
+      }}
     >
-      <Box sx={{ display: "flex", gap: 1, overflowX: "auto", scrollSnapType: "x mandatory" }}>
-        {images.length > 0 ? images.map((image, index) => (
-          <Box
-            key={`${image}-${index}`}
-            sx={{ minWidth: "100%", height: detail ? 320 : 200, position: "relative", scrollSnapAlign: "start" }}
+      <Box
+        sx={{
+          position: "relative",
+          height: detail ? 360 : 200,
+          bgcolor: "grey.100",
+        }}
+      >
+        {images.length > 0 && !brokenImage ? (
+          <CardMedia
+            component="img"
+            image={images[0]}
+            alt={property.title}
+            sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+            onError={() => setBrokenImage(true)}
+          />
+        ) : (
+          <Stack
+            sx={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1,
+              color: "text.secondary",
+            }}
           >
-            {failedImages.has(index) ? (
-              <Box sx={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 1, color: "text.secondary" }}>
-                <BrokenImageOutlinedIcon fontSize="large" />
-              </Box>
-            ) : (
-              <CardMedia
-                component="img"
-                image={image}
-                alt={`${property.title} image ${index + 1}`}
-                sx={{ width: "100%", height: "100%", objectFit: "cover" }}
-                onError={() => setFailedImages((current) => new Set(current).add(index))}
-              />
-            )}
-          </Box>
-        )) : (
-          <Box sx={{ minWidth: "100%", height: detail ? 320 : 200, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 1, color: "text.secondary" }}>
             <BrokenImageOutlinedIcon fontSize="large" />
-            <Typography>No image available</Typography>
-          </Box>
+            <Typography variant="body2">No image available</Typography>
+          </Stack>
+        )}
+
+        {(detail || showStatus) && property.status && (
+          <Chip
+            label={property.status}
+            size="small"
+            sx={{
+              position: "absolute",
+              top: 12,
+              left: 12,
+              bgcolor: "background.paper",
+            }}
+          />
         )}
       </Box>
+
       <CardContent>
-        <Typography variant={detail ? "h4" : "h6"}>{property.title}</Typography>
-        <Typography>₹{property.price.toLocaleString("en-IN")}</Typography>
-        {detail && getPropertyLocation(property) && (
-          <Typography color="text.secondary">{getPropertyLocation(property)}</Typography>
-        )}
-        {(detail || showStatus) && property.status && <Typography sx={{ mt: 1 }}>Status: {property.status}</Typography>}
-        {detail && property.description && <Typography sx={{ mt: 1 }}>{property.description}</Typography>}
-        {!detail && !hideActions && (
-          <>
-            <Button
-              startIcon={<ChatBubbleOutlineOutlinedIcon />}
-              sx={{ bgcolor: "#1976D2", color: "white", px: 2, marginRight: 5, mt: 1, borderRadius: 3 }}
+        <Stack
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            gap: 1,
+          }}
+        >
+          <Box>
+            <Typography variant={detail ? "h5" : "h6"} sx={{ fontWeight: 600 }}>
+              {property.title}
+            </Typography>
+            <Typography
+              variant={detail ? "h6" : "body1"}
+              color="primary"
+              sx={{ fontWeight: 600 }}
             >
-              Contact Owner
-            </Button>
-            <Button
+              ₹{property.price.toLocaleString("en-IN")}
+            </Typography>
+          </Box>
+
+          {!hideActions && (
+            <IconButton
+              onClick={toggleSave}
               disabled={saving}
-              onClick={async (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                setSaving(true);
-                try {
-                  if (isSaved) {
-                    await removeSavedProperty(property._id);
-                    setIsSaved(false);
-                    onRemoved?.(property._id);
-                  } else {
-                    await saveProperty(property._id);
-                    setIsSaved(true);
-                  }
-                } finally {
-                  setSaving(false);
-                }
-              }}
-              sx={{ bgcolor: isSaved ? "#b71c1c" : "#f5276c", color: "#faf7f8", px: 2, mt: 1, borderRadius: 6 }}
+              aria-label={isSaved ? "Remove from saved" : "Save property"}
             >
-              {isSaved ? "Saved" : "Fav"} <FavoriteIcon sx={{ ml: 0.5 }} />
-            </Button>
-          </>
+              {isSaved ? (
+                <FavoriteIcon color="error" />
+              ) : (
+                <FavoriteBorderIcon />
+              )}
+            </IconButton>
+          )}
+        </Stack>
+
+        {getPropertyLocation(property) && (
+          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+            {getPropertyLocation(property)}
+          </Typography>
+        )}
+
+        {detail && property.description && (
+          <Typography sx={{ mt: 2 }}>{property.description}</Typography>
+        )}
+
+        {detail && (
+          <Stack spacing={1.25} sx={{ mt: 2 }}>
+            {property.propertyType && (
+              <Typography>
+                <strong>Property type:</strong> {property.propertyType}
+              </Typography>
+            )}
+            {property.bhk !== undefined && (
+              <Typography>
+                <strong>BHK:</strong> {property.bhk}
+              </Typography>
+            )}
+            {(property.area !== undefined || property.sqft !== undefined) && (
+              <Typography>
+                <strong>Area:</strong> {property.area ?? property.sqft} sqft
+              </Typography>
+            )}
+            {property.city && (
+              <Typography>
+                <strong>City:</strong> {property.city}
+              </Typography>
+            )}
+            {property.locality && (
+              <Typography>
+                <strong>Locality:</strong> {property.locality}
+              </Typography>
+            )}
+            {(property.fullAddress || property.address) && (
+              <Typography>
+                <strong>Address:</strong> {property.fullAddress ?? property.address}
+              </Typography>
+            )}
+            {property.amenities && property.amenities.length > 0 && (
+              <Typography>
+                <strong>Amenities:</strong> {property.amenities.join(", ")}
+              </Typography>
+            )}
+            {(property.latitude !== undefined || property.lat !== undefined) &&
+              (property.longitude !== undefined || property.lng !== undefined) && (
+                <Typography>
+                  <strong>Coordinates:</strong> {property.latitude ?? property.lat},{" "}
+                  {property.longitude ?? property.lng}
+                </Typography>
+              )}
+          </Stack>
+        )}
+
+        {!detail && !hideActions && (
+          <Button
+            fullWidth
+            startIcon={<ChatBubbleOutlineOutlinedIcon />}
+            variant="outlined"
+            sx={{ mt: 2, borderRadius: 2 }}
+          >
+            Contact owner
+          </Button>
         )}
       </CardContent>
     </Card>
   );
-}
-
-function getPropertyLocation(property: Property) {
-  return property.location ??
-    [property.address, property.area, property.city].filter(Boolean).join(", ");
 }

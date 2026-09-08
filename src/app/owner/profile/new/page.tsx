@@ -1,5 +1,5 @@
-import PropertyForm from "@/components/properties/propertyform";
+import OwnerNewPage from "@/pages/ownerpage/ownerNewPage";
 
 export default function NewPropertyPage() {
-	return <PropertyForm />;
+	return <OwnerNewPage />;
 }

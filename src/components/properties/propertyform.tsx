@@ -1,18 +1,34 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import { useFormik } from "formik";
 import * as Yup from "yup";
-import { Alert, Box, Button, Card, CardContent, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import axios from "axios";
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  MenuItem,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { createProperty } from "@/services/propertyService";
 
-const propertyTypes = ["Apartment", "Villa", "Independent House", "Plot", "Commercial"] as const;
+const propertyTypes = [
+  "Apartment",
+  "Villa",
+  "Independent House",
+  "Plot",
+  "Commercial",
+];
 
 const initialValues = {
   title: "",
   description: "",
-  propertyType: "Apartment" as (typeof propertyTypes)[number],
+  propertyType: "Apartment",
   bhk: "",
   area: "",
   price: "",
@@ -25,111 +41,309 @@ const initialValues = {
   images: [""],
 };
 
-const propertySchema = Yup.object({
+const validationSchema = Yup.object({
   title: Yup.string().trim().required("Title is required"),
   description: Yup.string().trim().required("Description is required"),
-  propertyType: Yup.string().oneOf(propertyTypes).required("Property type is required"),
-  bhk: Yup.number().typeError("BHK must be a number").integer("BHK must be a whole number").min(0).required("BHK is required"),
-  area: Yup.number().typeError("Area must be a number").positive("Area must be greater than zero").required("Area is required"),
+  propertyType: Yup.string()
+    .oneOf(propertyTypes)
+    .required("Property type is required"),
+  bhk: Yup.number()
+    .typeError("BHK must be a number")
+    .integer()
+    .min(0)
+    .required("BHK is required"),
+  area: Yup.number()
+    .typeError("Area must be a number")
+    .positive()
+    .required("Area is required"),
+  price: Yup.number()
+    .typeError("Price must be a number")
+    .positive()
+    .required("Price is required"),
   city: Yup.string().trim().required("City is required"),
   locality: Yup.string().trim().required("Area / Locality is required"),
   fullAddress: Yup.string().trim().required("Full address is required"),
-  latitude: Yup.number().typeError("Latitude must be a number").min(-90).max(90).required("Latitude is required"),
-  longitude: Yup.number().typeError("Longitude must be a number").min(-180).max(180).required("Longitude is required"),
+  latitude: Yup.number()
+    .typeError("Latitude must be a number")
+    .min(-90)
+    .max(90)
+    .required("Latitude is required"),
+  longitude: Yup.number()
+    .typeError("Longitude must be a number")
+    .min(-180)
+    .max(180)
+    .required("Longitude is required"),
   amenities: Yup.string().trim().required("Add at least one amenity"),
   images: Yup.array()
-    .of(Yup.string().trim().url("Enter a valid image URL").required("Image URL is required"))
-    .min(1, "Add at least one image")
-    .required(),
-  price: Yup.number().typeError("Price must be a number").positive("Price must be greater than zero").required("Price is required"),
+    .of(Yup.string().trim().url("Enter a valid image URL").required())
+    .min(1, "Add at least one image"),
 });
 
 export default function PropertyForm() {
   const router = useRouter();
-  const [values, setValues] = useState(initialValues);
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
+  const formik = useFormik({
+    initialValues,
+    validationSchema,
+    onSubmit: async (values, { setSubmitting, setStatus }) => {
+      setStatus("");
+      try {
+        await createProperty({
+          title: values.title,
+          description: values.description,
+          city: values.city,
+          area: values.locality,
+          address: values.fullAddress,
+          lat: Number(values.latitude),
+          lng: Number(values.longitude),
+          propertyType: values.propertyType,
+          bhk: Number(values.bhk),
+          sqft: Number(values.area),
+          amenities: values.amenities
+            .split(",")
+            .map((a) => a.trim())
+            .filter(Boolean),
+          images: values.images,
+          price: Number(values.price),
+        });
+        router.push("/owner/profile/properties");
+      } catch (err) {
+        const message = axios.isAxiosError(err)
+          ? err.response?.data?.message
+          : null;
+        setStatus(
+          Array.isArray(message)
+            ? message.join(", ")
+            : (message ?? "Unable to create property. Please try again."),
+        );
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
 
-  const updateValue = (name: Exclude<keyof typeof initialValues, "images">, value: string) => {
-    setValues((current) => ({ ...current, [name]: value }));
-  };
+  const {
+    values,
+    errors,
+    touched,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+    isSubmitting,
+    status,
+    setFieldValue,
+  } = formik;
 
   const updateImage = (index: number, value: string) => {
-    setValues((current) => ({
-      ...current,
-      images: current.images.map((image, imageIndex) => imageIndex === index ? value : image),
-    }));
+    const images = [...values.images];
+    images[index] = value;
+    setFieldValue("images", images);
   };
 
-  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError("");
-
-    setSaving(true);
-
-    try {
-      const validatedValues = await propertySchema.validate(values, { abortEarly: false });
-      await createProperty({
-        title: validatedValues.title,
-        description: validatedValues.description,
-        city: validatedValues.city,
-        area: validatedValues.locality,
-        address: validatedValues.fullAddress,
-        lat: validatedValues.latitude,
-        lng: validatedValues.longitude,
-        propertyType: validatedValues.propertyType,
-        bhk: validatedValues.bhk,
-        sqft: validatedValues.area,
-        amenities: validatedValues.amenities.split(",").map((amenity) => amenity.trim()).filter(Boolean),
-        images: validatedValues.images,
-        price: validatedValues.price,
-      });
-      router.push("/owner/profile/properties");
-    } catch (requestError) {
-      if (requestError instanceof Yup.ValidationError) {
-        setError(requestError.errors.join(", "));
-        setSaving(false);
-        return;
-      }
-      const message = axios.isAxiosError(requestError)
-        ? requestError.response?.data?.message
-        : null;
-      setError(Array.isArray(message) ? message.join(", ") : message ?? "Unable to create property. Please try again.");
-      setSaving(false);
-    }
-  };
+  const addImage = () => setFieldValue("images", [...values.images, ""]);
+  const removeImage = (index: number) =>
+    setFieldValue(
+      "images",
+      values.images.filter((_, i) => i !== index),
+    );
 
   return (
     <Box sx={{ mt: 10, px: 3, pb: 4 }}>
-      <Typography variant="h4" sx={{ mb: 3, fontWeight: 700 }}>Create Property</Typography>
+      <Typography variant="h4" sx={{ mb: 3, fontWeight: 700 }}>
+        Create Property
+      </Typography>
       <Card sx={{ maxWidth: 720 }}>
-        <CardContent component="form" onSubmit={submit}>
+        <CardContent component="form" onSubmit={handleSubmit}>
           <Stack spacing={2}>
-            {error && <Alert severity="error">{error}</Alert>}
-            <TextField label="Title" required value={values.title} onChange={(event) => updateValue("title", event.target.value)} />
-            <TextField label="Description" required multiline minRows={3} value={values.description} onChange={(event) => updateValue("description", event.target.value)} />
-            <TextField select label="Property Type" required value={values.propertyType} onChange={(event) => updateValue("propertyType", event.target.value)}>
-              {propertyTypes.map((propertyType) => <MenuItem key={propertyType} value={propertyType}>{propertyType}</MenuItem>)}
+            {status && <Alert severity="error">{status}</Alert>}
+
+            <TextField
+              label="Title"
+              name="title"
+              required
+              value={values.title}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={touched.title && !!errors.title}
+              helperText={touched.title && errors.title}
+            />
+
+            <TextField
+              label="Description"
+              name="description"
+              required
+              multiline
+              minRows={3}
+              value={values.description}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={touched.description && !!errors.description}
+              helperText={touched.description && errors.description}
+            />
+
+            <TextField
+              select
+              label="Property Type"
+              name="propertyType"
+              required
+              value={values.propertyType}
+              onChange={handleChange}
+            >
+              {propertyTypes.map((type) => (
+                <MenuItem key={type} value={type}>
+                  {type}
+                </MenuItem>
+              ))}
             </TextField>
-            <TextField label="BHK" required type="number" slotProps={{ htmlInput: { min: 0, step: 1 } }} value={values.bhk} onChange={(event) => updateValue("bhk", event.target.value)} />
-            <TextField label="Area / Sqft" required type="number" slotProps={{ htmlInput: { min: 1 } }} value={values.area} onChange={(event) => updateValue("area", event.target.value)} />
-            <TextField label="Price" required type="number" slotProps={{ htmlInput: { min: 1 } }} value={values.price} onChange={(event) => updateValue("price", event.target.value)} />
-            <TextField label="City" required value={values.city} onChange={(event) => updateValue("city", event.target.value)} />
-            <TextField label="Area / Locality" required value={values.locality} onChange={(event) => updateValue("locality", event.target.value)} />
-            <TextField label="Full Address" required multiline minRows={2} value={values.fullAddress} onChange={(event) => updateValue("fullAddress", event.target.value)} />
+
+            <TextField
+              label="BHK"
+              name="bhk"
+              required
+              type="number"
+              value={values.bhk}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={touched.bhk && !!errors.bhk}
+              helperText={touched.bhk && errors.bhk}
+            />
+
+            <TextField
+              label="Area / Sqft"
+              name="area"
+              required
+              type="number"
+              value={values.area}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={touched.area && !!errors.area}
+              helperText={touched.area && errors.area}
+            />
+
+            <TextField
+              label="Price"
+              name="price"
+              required
+              type="number"
+              value={values.price}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={touched.price && !!errors.price}
+              helperText={touched.price && errors.price}
+            />
+
+            <TextField
+              label="City"
+              name="city"
+              required
+              value={values.city}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={touched.city && !!errors.city}
+              helperText={touched.city && errors.city}
+            />
+
+            <TextField
+              label="Area / Locality"
+              name="locality"
+              required
+              value={values.locality}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={touched.locality && !!errors.locality}
+              helperText={touched.locality && errors.locality}
+            />
+
+            <TextField
+              label="Full Address"
+              name="fullAddress"
+              required
+              multiline
+              minRows={2}
+              value={values.fullAddress}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={touched.fullAddress && !!errors.fullAddress}
+              helperText={touched.fullAddress && errors.fullAddress}
+            />
+
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-              <TextField label="Latitude" required type="number" fullWidth value={values.latitude} onChange={(event) => updateValue("latitude", event.target.value)} />
-              <TextField label="Longitude" required type="number" fullWidth value={values.longitude} onChange={(event) => updateValue("longitude", event.target.value)} />
+              <TextField
+                label="Latitude"
+                name="latitude"
+                required
+                type="number"
+                fullWidth
+                value={values.latitude}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={touched.latitude && !!errors.latitude}
+                helperText={touched.latitude && errors.latitude}
+              />
+              <TextField
+                label="Longitude"
+                name="longitude"
+                required
+                type="number"
+                fullWidth
+                value={values.longitude}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={touched.longitude && !!errors.longitude}
+                helperText={touched.longitude && errors.longitude}
+              />
             </Stack>
-            <TextField label="Amenities" required helperText="Separate amenities with commas" placeholder="Parking, Lift, Gym" value={values.amenities} onChange={(event) => updateValue("amenities", event.target.value)} />
+
+            <TextField
+              label="Amenities"
+              name="amenities"
+              required
+              helperText={
+                touched.amenities && errors.amenities
+                  ? errors.amenities
+                  : "Separate amenities with commas"
+              }
+              placeholder="Parking, Lift, Gym"
+              value={values.amenities}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={touched.amenities && !!errors.amenities}
+            />
+
             {values.images.map((image, index) => (
               <Stack key={index} direction="row" spacing={1}>
-                <TextField label={`Image URL ${index + 1}`} required type="url" fullWidth value={image} onChange={(event) => updateImage(index, event.target.value)} />
-                {values.images.length > 1 && <Button type="button" color="error" onClick={() => setValues((current) => ({ ...current, images: current.images.filter((_, imageIndex) => imageIndex !== index) }))}>Remove</Button>}
+                <TextField
+                  label={`Image URL ${index + 1}`}
+                  required
+                  type="url"
+                  fullWidth
+                  value={image}
+                  onChange={(e) => updateImage(index, e.target.value)}
+                />
+                {values.images.length > 1 && (
+                  <Button
+                    type="button"
+                    color="error"
+                    onClick={() => removeImage(index)}
+                  >
+                    Remove
+                  </Button>
+                )}
               </Stack>
             ))}
-            <Button type="button" variant="outlined" onClick={() => setValues((current) => ({ ...current, images: [...current.images, ""] }))}>Add another image</Button>
-            <Button type="submit" variant="contained" disabled={saving}>{saving ? "Creating..." : "Create Property"}</Button>
+            {touched.images && errors.images && (
+              <Alert severity="error">
+                {typeof errors.images === "string"
+                  ? errors.images
+                  : "Check your image URLs"}
+              </Alert>
+            )}
+            <Button type="button" variant="outlined" onClick={addImage}>
+              Add another image
+            </Button>
+
+            <Button type="submit" variant="contained" disabled={isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create Property"}
+            </Button>
           </Stack>
         </CardContent>
       </Card>

@@ -1,6 +1,6 @@
 import { Box, Card, CardContent, Grid, Typography } from "@mui/material";
 
-export default function AdminDashboard() {
+export default function AdminDashboardPage() {
   return (
     <Box sx={{ mt: 10, px: 4 }}>
       <Typography variant="h4" sx={{ mb: 3, fontWeight: 700 }}>

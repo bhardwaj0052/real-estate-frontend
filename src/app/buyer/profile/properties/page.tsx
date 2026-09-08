@@ -1,5 +1,5 @@
-import PropertySearch from "@/components/properties/propertysearch";
+import PropertyPropertyPage from "@/pages/buyerpage/buyerPropertiesPage";
 
 export default function PropertiesPage() {
-  return <PropertySearch />;
+  return <PropertyPropertyPage/>
 }
