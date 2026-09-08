@@ -139,7 +139,7 @@ export default function PropertyForm() {
     );
 
   return (
-    <Box sx={{ mt: 10, px: 3, pb: 4 }}>
+    <Box sx={{ mt: 10, marginLeft:50, pb: 4 }}>
       <Typography variant="h4" sx={{ mb: 3, fontWeight: 700 }}>
         Create Property
       </Typography>

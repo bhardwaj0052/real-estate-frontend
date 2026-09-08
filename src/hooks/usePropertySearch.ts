@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   getApprovedProperties,
   getSavedProperties,
@@ -82,47 +82,67 @@ function filterProperties(properties: Property[], filters: Filters) {
 
   return properties
     .filter((property) => {
-      const propertyCity = (property.city ?? property.location ?? "").toLowerCase();
-      const propertyAmenities = (property.amenities ?? []).map((item) => item.toLowerCase());
+      const propertyCity = [
+        property.city,
+        property.location,
+        property.fullAddress,
+        property.address,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      const propertyType = (property.propertyType ?? "").toLowerCase();
+      const propertyAmenities = (property.amenities ?? []).map((item) =>
+        item.toLowerCase(),
+      );
+      const propertyBhk = Number(property.bhk);
+      const propertyPrice = Number(property.price);
+      const propertySqft = Number(property.sqft ?? property.area ?? 0);
       return (
         (!city || propertyCity.includes(city)) &&
-        (!filters.propertyType || property.propertyType === filters.propertyType) &&
-        (bhk === undefined || property.bhk === bhk) &&
-        (minPrice === undefined || property.price >= minPrice) &&
-        (maxPrice === undefined || property.price <= maxPrice) &&
-        (minSqft === undefined || (property.sqft ?? property.area ?? 0) >= minSqft) &&
-        (maxSqft === undefined || (property.sqft ?? property.area ?? 0) <= maxSqft) &&
+        (!filters.propertyType || propertyType === filters.propertyType.toLowerCase()) &&
+        (bhk === undefined || propertyBhk === bhk) &&
+        (minPrice === undefined || propertyPrice >= minPrice) &&
+        (maxPrice === undefined || propertyPrice <= maxPrice) &&
+        (minSqft === undefined || propertySqft >= minSqft) &&
+        (maxSqft === undefined || propertySqft <= maxSqft) &&
         amenities.every((required) =>
           propertyAmenities.some((available) => available.includes(required)),
         )
       );
     })
     .sort((first, second) => {
-      const firstValue =
-        filters.sortBy === "title"
-          ? first.title.toLowerCase()
-          : filters.sortBy === "sqft"
-            ? (first.sqft ?? first.area ?? 0)
-            : first.price;
-      const secondValue =
-        filters.sortBy === "title"
-          ? second.title.toLowerCase()
-          : filters.sortBy === "sqft"
-            ? (second.sqft ?? second.area ?? 0)
-            : second.price;
+      const firstValue = getSortValue(first, filters.sortBy);
+      const secondValue = getSortValue(second, filters.sortBy);
       const comparison = firstValue < secondValue ? -1 : firstValue > secondValue ? 1 : 0;
       return filters.sortOrder === "asc" ? comparison : -comparison;
     });
 }
 
+function getSortValue(property: Property, sortBy: SortBy) {
+  if (sortBy === "title") {
+    return property.title.toLowerCase();
+  }
+
+  if (sortBy === "sqft") {
+    return property.sqft ?? property.area ?? 0;
+  }
+
+  return Number(property.price);
+}
+
 function extractSavedIds(response: SavedPropertiesResponse): string[] {
-  const savedProperties = Array.isArray(response)
-    ? response
-    : "properties" in response
-      ? response.properties
-      : "savedProperties" in response
-        ? response.savedProperties
-        : response.data;
+  let savedProperties: SavedProperty[];
+
+  if (Array.isArray(response)) {
+    savedProperties = response;
+  } else if ("properties" in response) {
+    savedProperties = response.properties;
+  } else if ("savedProperties" in response) {
+    savedProperties = response.savedProperties;
+  } else {
+    savedProperties = response.data;
+  }
 
   return savedProperties.flatMap((item) => {
     if (!item.propertyId) return [];
@@ -134,6 +154,7 @@ export function usePropertySearch() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [savedPropertyIds, setSavedPropertyIds] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState<Filters>(initialFilters);
+  const [appliedFilters, setAppliedFilters] = useState<Filters>(initialFilters);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -166,7 +187,16 @@ export function usePropertySearch() {
     setFilters((current) => ({ ...current, [key]: value }));
   };
 
-  const resetFilters = () => setFilters(initialFilters);
+  const resetFilters = () => {
+    setFilters(initialFilters);
+    setAppliedFilters(initialFilters);
+  };
+
+  const applyFilters = () => setAppliedFilters({ ...filters });
+  const filteredProperties = useMemo(
+    () => filterProperties(properties, appliedFilters),
+    [properties, appliedFilters],
+  );
 
   const toggleSavedProperty = async (propertyId: string) => {
     const isSaved = savedPropertyIds.has(propertyId);
@@ -189,7 +219,8 @@ export function usePropertySearch() {
     filters,
     updateFilter,
     resetFilters,
-    filteredProperties: filterProperties(properties, filters),
+    filteredProperties,
+    applyFilters,
     savedPropertyIds,
     toggleSavedProperty,
   };

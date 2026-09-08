@@ -90,14 +90,27 @@ export default function PropertyCard({
   }, [saved]);
 
   useEffect(() => {
-    if (!ownerId || ownerPhone) return;
+  if (!ownerId || ownerPhone) return;
 
-    getUserById<{ phone?: string; user?: { phone?: string } }>(String(ownerId))
-      .then((owner) =>
-        setFetchedOwnerPhone(owner.phone ?? owner.user?.phone ?? ""),
-      )
-      .catch(() => setFetchedOwnerPhone(""));
-  }, [ownerId, ownerPhone]);
+  let cancelled = false;
+
+  const fetchOwnerPhone = async () => {
+    try {
+      const res = await getUserById<{ phone?: string; user?: { phone?: string } }>(String(ownerId));
+      if (!cancelled) {
+        setFetchedOwnerPhone(res.phone ?? res.user?.phone ?? "");
+      }
+    } catch {
+      if (!cancelled) setFetchedOwnerPhone("");
+    }
+  };
+
+  fetchOwnerPhone();
+
+  return () => {
+    cancelled = true;
+  };
+}, [ownerId, ownerPhone]);
 
   const showPrevious = () => {
     setActiveImage((current) => (current === 0 ? availableImages.length - 1 : current - 1));

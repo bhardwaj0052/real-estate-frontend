@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import {
   Alert,
   Box,
@@ -8,6 +10,7 @@ import {
   Grid,
   InputLabel,
   MenuItem,
+  Pagination,
   Paper,
   Select,
   TextField,
@@ -30,13 +33,19 @@ export default function PropertyPropertyPage() {
     filters,
     updateFilter,
     resetFilters,
+    applyFilters,
     filteredProperties,
     savedPropertyIds,
     toggleSavedProperty,
   } = usePropertySearch();
+  const [page, setPage] = useState(1);
+  const pageProperties = filteredProperties.slice((page - 1) * 10, page * 10);
+  const pageCount = Math.ceil(filteredProperties.length / 10);
 
   if (loading) {
-    return <Typography sx={{ mt: 10, px: 3 }}>Loading properties...</Typography>;
+    return (
+      <Typography sx={{ mt: 10, px: 3 }}>Loading properties...</Typography>
+    );
   }
   if (error) {
     return (
@@ -55,49 +64,102 @@ export default function PropertyPropertyPage() {
         Narrow the market by location, budget, size, and lifestyle.
       </Typography>
 
-      <Paper component="section" elevation={2} sx={{ p: { xs: 2, md: 3 }, mb: 3 }}>
+      <Paper
+        component="section"
+        elevation={2}
+        sx={{ p: { xs: 2, md: 3 }, mb: 3 }}
+      >
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <TextField fullWidth label="City" value={filters.city} onChange={(e) => updateFilter("city", e.target.value)} />
+            <TextField
+              fullWidth
+              label="City"
+              value={filters.city}
+              onChange={(e) => updateFilter("city", e.target.value)}
+            />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <FormControl fullWidth>
               <InputLabel>Property type</InputLabel>
-              <Select label="Property type" value={filters.propertyType} onChange={(e) => updateFilter("propertyType", e.target.value)}>
+              <Select
+                label="Property type"
+                value={filters.propertyType}
+                onChange={(e) => updateFilter("propertyType", e.target.value)}
+              >
                 <MenuItem value="">Any type</MenuItem>
                 {propertyTypes.map((type) => (
-                  <MenuItem key={type} value={type}>{type}</MenuItem>
+                  <MenuItem key={type} value={type}>
+                    {type}
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-            <TextField fullWidth label="BHK" type="number" slotProps={{ htmlInput: { min: 0, step: 1 } }} value={filters.bhk} onChange={(e) => updateFilter("bhk", e.target.value)} />
+            <TextField
+              fullWidth
+              label="BHK"
+              type="number"
+              slotProps={{ htmlInput: { min: 0, step: 1 } }}
+              value={filters.bhk}
+              onChange={(e) => updateFilter("bhk", e.target.value)}
+            />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-            <TextField fullWidth label="Amenities" placeholder="Gym, parking" value={filters.amenities} onChange={(e) => updateFilter("amenities", e.target.value)} />
-          </Grid>
-          <Grid size={{ xs: 12, md: 2 }}>
-            <Button fullWidth variant="outlined" onClick={resetFilters} sx={{ height: "100%" }}>
-              Reset filters
-            </Button>
-          </Grid>
-          <Grid size={{ xs: 6, sm: 3 }}>
-            <TextField fullWidth label="Min price" type="number" value={filters.minPrice} onChange={(e) => updateFilter("minPrice", e.target.value)} />
+            <TextField
+              fullWidth
+              label="Amenities"
+              placeholder="Gym, parking"
+              value={filters.amenities}
+              onChange={(e) => updateFilter("amenities", e.target.value)}
+            />
           </Grid>
           <Grid size={{ xs: 6, sm: 3 }}>
-            <TextField fullWidth label="Max price" type="number" value={filters.maxPrice} onChange={(e) => updateFilter("maxPrice", e.target.value)} />
+            <TextField
+              fullWidth
+              label="Min price"
+              type="number"
+              value={filters.minPrice}
+              onChange={(e) => updateFilter("minPrice", e.target.value)}
+            />
           </Grid>
           <Grid size={{ xs: 6, sm: 3 }}>
-            <TextField fullWidth label="Min sqft" type="number" value={filters.minSqft} onChange={(e) => updateFilter("minSqft", e.target.value)} />
+            <TextField
+              fullWidth
+              label="Max price"
+              type="number"
+              value={filters.maxPrice}
+              onChange={(e) => updateFilter("maxPrice", e.target.value)}
+            />
           </Grid>
           <Grid size={{ xs: 6, sm: 3 }}>
-            <TextField fullWidth label="Max sqft" type="number" value={filters.maxSqft} onChange={(e) => updateFilter("maxSqft", e.target.value)} />
+            <TextField
+              fullWidth
+              label="Min sqft"
+              type="number"
+              value={filters.minSqft}
+              onChange={(e) => updateFilter("minSqft", e.target.value)}
+            />
+          </Grid>
+          <Grid size={{ xs: 6, sm: 3 }}>
+            <TextField
+              fullWidth
+              label="Max sqft"
+              type="number"
+              value={filters.maxSqft}
+              onChange={(e) => updateFilter("maxSqft", e.target.value)}
+            />
           </Grid>
           <Grid size={{ xs: 6, sm: 3 }}>
             <FormControl fullWidth>
               <InputLabel>Sort by</InputLabel>
-              <Select label="Sort by" value={filters.sortBy} onChange={(e) => updateFilter("sortBy", e.target.value as SortBy)}>
+              <Select
+                label="Sort by"
+                value={filters.sortBy}
+                onChange={(e) =>
+                  updateFilter("sortBy", e.target.value as SortBy)
+                }
+              >
                 <MenuItem value="price">Price</MenuItem>
                 <MenuItem value="sqft">Area</MenuItem>
                 <MenuItem value="title">Title</MenuItem>
@@ -107,17 +169,41 @@ export default function PropertyPropertyPage() {
           <Grid size={{ xs: 6, sm: 3 }}>
             <FormControl fullWidth>
               <InputLabel>Order</InputLabel>
-              <Select label="Order" value={filters.sortOrder} onChange={(e) => updateFilter("sortOrder", e.target.value as SortOrder)}>
+              <Select
+                label="Order"
+                value={filters.sortOrder}
+                onChange={(e) =>
+                  updateFilter("sortOrder", e.target.value as SortOrder)
+                }
+              >
                 <MenuItem value="asc">Low to high</MenuItem>
                 <MenuItem value="desc">High to low</MenuItem>
               </Select>
             </FormControl>
           </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Button fullWidth variant="outlined" onClick={resetFilters}>
+              Reset filters
+            </Button>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={() => {
+                applyFilters();
+                setPage(1);
+              }}
+            >
+              Apply filters
+            </Button>
+          </Grid>
         </Grid>
       </Paper>
 
       <Typography sx={{ mb: 2 }} color="text.secondary">
-        {filteredProperties.length} {filteredProperties.length === 1 ? "property" : "properties"} found
+        {filteredProperties.length}{" "}
+        {filteredProperties.length === 1 ? "property" : "properties"} found
       </Typography>
 
       <Box
@@ -130,35 +216,49 @@ export default function PropertyPropertyPage() {
         }}
       >
         {/* Left half: property cards, scrollable */}
-        <Box sx={{ width: { xs: "100%", md: "50%" }, overflowY: { md: "auto" }, pr: { md: 1 } }}>
+        <Box
+          sx={{
+            width: { xs: "100%", md: "50%" },
+            overflowY: { md: "auto" },
+            pr: { md: 1 },
+          }}
+        >
           {filteredProperties.length === 0 ? (
             <Typography>No properties match these filters.</Typography>
           ) : (
             <Grid container spacing={2}>
-              {filteredProperties.map((property) => (
+              {pageProperties.map((property) => (
                 <Grid key={property._id} size={{ xs: 12, sm: 6 }}>
                   <PropertyCard
-  title={property.title}
-  price={property.price}
-  location={getPropertyLocation(property)}
-  images={property.images}
-  bhk={property.bhk}
-  sqft={property.sqft ?? property.area}
-  propertyType={property.propertyType}
-  description={property.description}
-  city={property.city}
-  locality={property.locality}
-  address={property.fullAddress ?? property.address}
-  amenities={property.amenities}
-  latitude={property.latitude ?? property.lat}
-  longitude={property.longitude ?? property.lng}
-  ownerId={property.ownerId ?? property.owner?._id}
-  saved={savedPropertyIds.has(property._id)}
-  onFavorite={() => toggleSavedProperty(property._id)}
-/>
+                    title={property.title}
+                    price={property.price}
+                    location={getPropertyLocation(property)}
+                    images={property.images}
+                    bhk={property.bhk}
+                    sqft={property.sqft ?? property.area}
+                    propertyType={property.propertyType}
+                    description={property.description}
+                    city={property.city}
+                    locality={property.locality}
+                    address={property.fullAddress ?? property.address}
+                    amenities={property.amenities}
+                    latitude={property.latitude ?? property.lat}
+                    longitude={property.longitude ?? property.lng}
+                    ownerId={property.ownerId ?? property.owner?._id}
+                    saved={savedPropertyIds.has(property._id)}
+                    onFavorite={() => toggleSavedProperty(property._id)}
+                  />
                 </Grid>
               ))}
             </Grid>
+          )}
+          {pageCount > 1 && (
+            <Pagination
+              count={pageCount}
+              page={page}
+              onChange={(_, value) => setPage(value)}
+              sx={{ mt: 3, display: "flex", justifyContent: "center" }}
+            />
           )}
         </Box>
         <Box

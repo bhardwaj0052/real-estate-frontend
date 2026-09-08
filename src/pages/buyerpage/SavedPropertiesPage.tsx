@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, Box, Grid, Typography } from "@mui/material";
+import { Alert, Box, Grid, Pagination, Typography } from "@mui/material";
 import {
     getProperty,
     getSavedProperties,
@@ -23,6 +23,9 @@ export default function SavedPropertiesPage() {
     const [properties, setProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [page, setPage] = useState(1);
+    const pageProperties = properties.slice((page - 1) * 10, page * 10);
+    const pageCount = Math.ceil(properties.length / 10);
 
     useEffect(() => {
         async function loadSavedProperties() {
@@ -67,7 +70,12 @@ export default function SavedPropertiesPage() {
     const removeFromSaved = async (propertyId: string) => {
         try {
             await removeSavedProperty(propertyId);
-            setProperties((current) => current.filter((item) => item._id !== propertyId));
+                setProperties((current) => {
+                    const next = current.filter((item) => item._id !== propertyId);
+                    const nextPageCount = Math.max(1, Math.ceil(next.length / 10));
+                    setPage((currentPage) => Math.min(currentPage, nextPageCount));
+                    return next;
+                });
         } catch {
             setError("Unable to remove this saved property.");
         }
@@ -86,7 +94,7 @@ export default function SavedPropertiesPage() {
             {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
             <Grid container spacing={3}>
-                {properties.map((property) => (
+                {pageProperties.map((property) => (
                     <Grid key={property._id} size={{ xs: 12, sm: 6, md: 4 }}>
                         <PropertyCard
                             title={property.title}
@@ -103,6 +111,15 @@ export default function SavedPropertiesPage() {
                     </Grid>
                 ))}
             </Grid>
+
+            {pageCount > 1 && (
+                <Pagination
+                    count={pageCount}
+                    page={page}
+                    onChange={(_, value) => setPage(value)}
+                    sx={{ mt: 3, display: "flex", justifyContent: "center" }}
+                />
+            )}
 
             {!properties.length && !error && (
                 <Typography>No saved properties yet.</Typography>

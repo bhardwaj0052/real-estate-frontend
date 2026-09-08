@@ -28,6 +28,7 @@ export function usePropertyCard() {
 
   useEffect(() => {
     if (!token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false);
       return;
     }
@@ -57,13 +58,17 @@ export function usePropertyCard() {
 }
 
 function getSavedPropertyIds(response: SavedPropertiesResponse): string[] {
-  const savedProperties = Array.isArray(response)
-    ? response
-    : "properties" in response
-      ? response.properties
-      : "savedProperties" in response
-        ? response.savedProperties
-        : response.data;
+  let savedProperties: SavedProperty[];
+
+  if (Array.isArray(response)) {
+    savedProperties = response;
+  } else if ("properties" in response) {
+    savedProperties = response.properties;
+  } else if ("savedProperties" in response) {
+    savedProperties = response.savedProperties;
+  } else {
+    savedProperties = response.data;
+  }
 
   return savedProperties.flatMap((item) => {
     if (!item.propertyId) return [];

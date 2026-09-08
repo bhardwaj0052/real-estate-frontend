@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, Box, Button, Grid, Stack, Typography } from "@mui/material";
+import { Alert, Box, Button, Grid, Pagination, Stack, Typography } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import { deleteProperty, getProperties } from "@/services/propertyService";
 import type { Property } from "@/types/property";
@@ -12,6 +12,9 @@ export default function OwnerPropertiesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const pageProperties = properties.slice((page - 1) * 10, page * 10);
+  const pageCount = Math.ceil(properties.length / 10);
 
   useEffect(() => {
     async function loadProperties() {
@@ -37,7 +40,12 @@ export default function OwnerPropertiesPage() {
     setError("");
     try {
       await deleteProperty(id);
-      setProperties((current) => current.filter((property) => property._id !== id));
+      setProperties((current) => {
+        const next = current.filter((property) => property._id !== id);
+        const nextPageCount = Math.max(1, Math.ceil(next.length / 10));
+        setPage((currentPage) => Math.min(currentPage, nextPageCount));
+        return next;
+      });
     } catch {
       setError("Unable to delete this property.");
     } finally {
@@ -62,7 +70,7 @@ export default function OwnerPropertiesPage() {
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
       <Grid container spacing={3}>
-        {properties.map((property) => (
+        {pageProperties.map((property) => (
           <Grid
             key={property._id}
             size={{ xs: 12, sm: 6, md: 4 }}
@@ -71,6 +79,7 @@ export default function OwnerPropertiesPage() {
               <PropertyCardItem
                 property={property}
                 showStatus
+                detail
                 hideActions
                 href={`/owner/profile/properties/${property._id}`}
               />
@@ -87,6 +96,15 @@ export default function OwnerPropertiesPage() {
           </Grid>
         ))}
       </Grid>
+
+      {pageCount > 1 && (
+        <Pagination
+          count={pageCount}
+          page={page}
+          onChange={(_, value) => setPage(value)}
+          sx={{ mt: 3, display: "flex", justifyContent: "center" }}
+        />
+      )}
 
       {!properties.length && (
         <Typography>No properties created yet.</Typography>

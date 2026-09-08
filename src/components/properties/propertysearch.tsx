@@ -30,6 +30,7 @@ export default function PropertySearch() {
     filters,
     updateFilter,
     resetFilters,
+    applyFilters,
     filteredProperties,
     savedPropertyIds,
     toggleSavedProperty,
@@ -112,16 +113,6 @@ export default function PropertySearch() {
               }
             />
           </Grid>
-          <Grid size={{ xs: 12, md: 2 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={resetFilters}
-              sx={{ height: "100%" }}
-            >
-              Reset filters
-            </Button>
-          </Grid>
           <Grid size={{ xs: 6, sm: 3 }}>
             <TextField
               fullWidth
@@ -188,6 +179,16 @@ export default function PropertySearch() {
                 <MenuItem value="desc">High to low</MenuItem>
               </Select>
             </FormControl>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Button fullWidth variant="outlined" onClick={resetFilters}>
+              Reset filters
+            </Button>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Button fullWidth variant="contained" onClick={applyFilters}>
+              Apply filters
+            </Button>
           </Grid>
         </Grid>
       </Paper>

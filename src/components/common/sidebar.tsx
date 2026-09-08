@@ -34,11 +34,6 @@ const userMenuItems = [
     href: "/buyer/profile/saved-properties",
   },
   {
-    label: "Inbox",
-    icon: <MessageIcon />,
-    href: "/buyer/profile/messages",
-  },
-  {
     label: "Properties",
     icon: <AddHomeIcon />,
     href: "/buyer/profile/properties",
@@ -55,11 +50,6 @@ const adminMenuItems = [
     label: "Properties",
     icon: <AddHomeIcon />,
     href: "/admin/properties",
-  },
-  {
-    label: "Users",
-    icon: <PeopleIcon />,
-    href: "/admin/users",
   },
 ];
 
